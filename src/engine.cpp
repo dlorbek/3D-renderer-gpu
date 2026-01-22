@@ -33,7 +33,7 @@ void Engine::initOpenGL(int w, int h){
     
     glViewport(0, 0, w, h);
 
-    shaderProgram = std::make_unique<Shader>("resources/Shaders/github.vert", "resources/Shaders/github.frag");
+    shaderProgram = std::make_unique<Shader>("data/Shaders/github.vert", "data/Shaders/github.frag");
     
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
