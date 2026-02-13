@@ -2,43 +2,43 @@
 
 #include "headers/game.h"
 #include "headers/engine.h"
-
+#include <filesystem>
 
 
 
 #define SCREEN_W 1920
 #define SCREEN_H 1080
 
-
+const int window_w = 800;
+const int window_h = window_w;
 
 
 int main(int argc, char** argv){
     
-    int window_w = 600;
-    int window_h = window_w;
     
-    Engine engine(window_w, window_h);
+    
+    
     
 
-    std::string filename;
+    std::string filepath;
     if(argc > 1){
-        filename = argv[1];
+        filepath = argv[1];
         if(argc > 2){
             for(int i = 2; i < argc; i++){
-                filename += " ";
-                filename += argv[i];
+                filepath += " ";
+                filepath += argv[i];
             }
         }
         
     } else {
-        printf("No file,\n");
+        printf("No file\n");
         return 1;
     }
 
-    printf("Opening file: %s", filename.data());
-    std::ifstream file(filename.data(), std::ios::binary);
+    printf("Opening file: %s\n", filepath.data());
+    std::ifstream file(filepath.data(), std::ios::binary);
     if (!file.is_open()) {
-        std::cerr << "Error: Unable to open file '" << filename << "'" << std::endl;
+        std::cerr << "Error: Unable to open file '" << filepath << "'" << std::endl;
         return 1;
     }
 
@@ -47,19 +47,19 @@ int main(int argc, char** argv){
     file.close();
 
     printf("STL loaded. Triangle count: %d\n", triangles.size());
+    std::string filename = std::filesystem::path(filepath).filename().string();
+
+    Engine engine(window_w, window_h);
 
     // convert OpenSTL triangles to my triangles
     std::vector<Triangle> modelTriangles;
     engine.parseTriangles(triangles, modelTriangles);
-
-
-
     engine.buildMesh(modelTriangles);
 
 
-
+    std::string winName = "Dan's 3D Viewer - " + filename;
     Game game;
-    game.createWindow("Dan's 3D Viewer", window_w, window_h, SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    game.createWindow(winName.data(), window_w, window_h, SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
         printf("Failed to initialize GLAD\n");

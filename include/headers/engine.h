@@ -15,6 +15,7 @@ struct Vertex
 {
     Vec3 pos;
     Vec3 normal;
+    Vec3 color;
 };
 
 
@@ -25,7 +26,15 @@ struct Triangle
     Vec3 v1;
     Vec3 v2;
     Vec3 n;
-    float avgZ;
+};
+
+
+struct Model
+{
+    GLuint VBO;
+    GLuint VAO;
+    std::vector<Vertex> vertices;
+    Mat4 modelMatrix;
 };
 
 
@@ -38,8 +47,6 @@ class Engine{
         ~Engine();
         void initOpenGL(int, int);
         void buildMesh(std::vector<Triangle>& triangles);
-        Vec3 convert(const openstl::Vec3& v);
-        Triangle convert(const openstl::Triangle& tri);
         void parseTriangles(std::vector<openstl::Triangle>& libTri, std::vector<Triangle>& Tri);
 
         void render(SDL_Window*);
@@ -56,11 +63,12 @@ class Engine{
         Mat4 modelMatrix, view, proj;
         Vec3 lightDir;
         
-        GLuint VBO, VAO, EBO, nVBO;
+        GLuint VBO, VAO;
         std::unique_ptr<Shader> shaderProgram;
-        Vec4 lightColor = {1.0f, 1.0f, 1.0f, 1.0f};
+        
 
         std::vector<Vertex> vertices;
+        std::vector<Model> models;
 
 
 };

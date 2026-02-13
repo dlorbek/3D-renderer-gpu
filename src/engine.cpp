@@ -24,7 +24,6 @@ Engine::Engine(int w_, int h_){
 Engine::~Engine(){
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
     shaderProgram->Delete();
     printf("Engine destroyed\n");
 }
@@ -33,11 +32,11 @@ void Engine::initOpenGL(int w, int h){
     
     glViewport(0, 0, w, h);
 
-    shaderProgram = std::make_unique<Shader>("data/Shaders/github.vert", "data/Shaders/github.frag");
+    shaderProgram = std::make_unique<Shader>("data/Shaders/default.vert", "data/Shaders/default.frag");
     
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &nVBO);
+    
 
     glBindVertexArray(VAO);
 
@@ -51,6 +50,11 @@ void Engine::initOpenGL(int w, int h){
     // Normals
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     glEnableVertexAttribArray(1);
+
+    // Colors
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+    glEnableVertexAttribArray(2);
+
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -93,14 +97,6 @@ void Engine::render(SDL_Window* window){
 
 
 
-Vec3 Engine::convert(const openstl::Vec3& v){
-    return { v.x, v.y, v.z };
-}
-
-Triangle Engine::convert(const openstl::Triangle& t){
-    return { convert(t.v0), convert(t.v1), convert(t.v2), convert(t.normal) };
-}
-
 void Engine::buildMesh(std::vector<Triangle>& triangles)
 {
     vertices.clear();
@@ -111,14 +107,17 @@ void Engine::buildMesh(std::vector<Triangle>& triangles)
         Vertex v0;
         v0.pos    = t.v0;
         v0.normal = t.n;
+        v0.color = {0.0f, 0.0f, 1.0f};
 
         Vertex v1;
         v1.pos    = t.v1;
         v1.normal = t.n;
+        v1.color = {0.0f, 0.0f, 1.0f};
 
         Vertex v2;
         v2.pos    = t.v2;
         v2.normal = t.n;
+        v2.color = {0.0f, 0.0f, 1.0f};
 
         vertices.push_back(v0);
         vertices.push_back(v1);
