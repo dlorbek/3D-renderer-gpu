@@ -8,6 +8,8 @@ Game::Game(){
     gameState = GameState::PLAY;
     SDL_Init(SDL_INIT_VIDEO);
     dragging = false;
+    printf("Game created.\n");
+    
 };
 
 Game::~Game(){
@@ -29,6 +31,11 @@ void Game::createWindow(const char* title, int w, int h, Uint32 flags){
 
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, glContext);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+
+    SDL_SetWindowRelativeMouseMode(window, false);
+    printf("Window opened.\n");
 }
 
 
@@ -42,10 +49,14 @@ void Game::handleEvents(SDL_Event* event){
         gameState = GameState::EXIT;
         break;
 
-    case SDL_EVENT_KEY_DOWN:
-        printf("\n%s key pressed.\n", SDL_GetKeyName(event->key.key));
-        if(event->key.key == SDLK_ESCAPE){
-            gameState = GameState::EXIT;
+    case SDL_EVENT_KEY_UP:
+        // printf("\n%s key pressed.\n", SDL_GetKeyName(event->key.key));
+        switch (event->key.key){
+            case SDLK_ESCAPE:
+                gameState = GameState::EXIT;
+                break;
+            default:
+                break;
         }
         break;
     

@@ -14,13 +14,8 @@ const int window_h = window_w;
 
 
 int main(int argc, char** argv){
-    
-    
-    
-    
-    
-
     std::string filepath;
+    std::vector<openstl::Triangle> triangles;
     if(argc > 1){
         filepath = argv[1];
         if(argc > 2){
@@ -29,35 +24,32 @@ int main(int argc, char** argv){
                 filepath += argv[i];
             }
         }
+
+        printf("Opening file: %s\n", filepath.data());
+        std::ifstream file(filepath.data(), std::ios::binary);
+        if (!file.is_open()) {
+            std::cerr << "Error: Unable to open file '" << filepath << "'" << std::endl;
+            return 1;
+        }
+
+        // Deserialize the triangles in either binary or ASCII format
+        triangles = openstl::deserializeStl(file);
+        file.close();
+
+        printf("STL loaded. Triangle count: %d\n", triangles.size());
+        std::string filename = std::filesystem::path(filepath).filename().string();
         
     } else {
-        printf("No file\n");
-        return 1;
+        printf("Press O to open a model\n");
     }
 
-    printf("Opening file: %s\n", filepath.data());
-    std::ifstream file(filepath.data(), std::ios::binary);
-    if (!file.is_open()) {
-        std::cerr << "Error: Unable to open file '" << filepath << "'" << std::endl;
-        return 1;
-    }
+    
+    
+    
+    
 
-    // Deserialize the triangles in either binary or ASCII format
-    std::vector<openstl::Triangle> triangles = openstl::deserializeStl(file);
-    file.close();
-
-    printf("STL loaded. Triangle count: %d\n", triangles.size());
-    std::string filename = std::filesystem::path(filepath).filename().string();
-
-    Engine engine(window_w, window_h);
-
-    // convert OpenSTL triangles to my triangles
-    std::vector<Triangle> modelTriangles;
-    engine.parseTriangles(triangles, modelTriangles);
-    engine.buildMesh(modelTriangles);
-
-
-    std::string winName = "Dan's 3D Viewer - " + filename;
+    // create window and engine
+    std::string winName = "Dan's 3D Viewer - ";
     Game game;
     game.createWindow(winName.data(), window_w, window_h, SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
@@ -66,7 +58,15 @@ int main(int argc, char** argv){
         return -1;
     }
 
+    Engine engine(window_w, window_h);
     engine.initOpenGL(window_w, window_h);
+    
+
+    // build model from triangles
+    if(argc > 1){
+        engine.models.emplace_back(engine.createModel(triangles));
+    }
+    
     
 
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv){
         SDL_Event e;
         while(SDL_PollEvent(&e)){
             game.handleEvents(&e);
-            engine.handleEvents(&e);
+            engine.handleEvents(&e, game.window);
         }
 
         
