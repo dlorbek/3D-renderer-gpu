@@ -40,7 +40,7 @@ int main(int argc, char** argv){
         std::string filename = std::filesystem::path(filepath).filename().string();
         
     } else {
-        printf("Press O to open a model\n");
+        printf("No file provided.\n");
     }
 
     
@@ -74,7 +74,8 @@ int main(int argc, char** argv){
     static int frames = 0;
     static Uint64 fpsTimer = SDL_GetTicks();
 
-    
+    if(argc == 1) printf("\n --- PRESS O TO OPEN A MODEL ---\n\n");
+
     //---------------------------------GAME LOOP-----------------------------------------------
     float angle = 0.0f;
     while(game.gameState != GameState::EXIT){

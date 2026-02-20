@@ -29,7 +29,7 @@ struct Triangle
     Vec3 n;
 };
 
-
+// TODO make class
 struct Model
 {
     GLuint VBO = 0;
@@ -41,10 +41,11 @@ struct Model
 
     Model() = default;
 
+    // prevent Model copying
     Model(const Model&) = delete;
     Model& operator=(const Model&) = delete;
 
-    // ✅ Move constructor
+    // instead move Model
     Model(Model&& other) noexcept
         : VBO(other.VBO),
           VAO(other.VAO),
@@ -58,7 +59,6 @@ struct Model
         other.VBO = 0;
     }
 
-    // ✅ Move assignment
     Model& operator=(Model&& other) noexcept
     {
         if (this != &other)
@@ -96,11 +96,16 @@ private:
 
 
 
-
+// offscreen buffer for model selection
 struct Framebuffer
 {
     GLuint FBO, texture, depth;
     GLuint colorIDloc;
+    GLuint highlightColorLoc;
+
+    Vec3 hoverColor = {0.85f, 0.85f, 0.85f};
+    Vec3 selectColor = {1.0f, 1.0f, 1.0f};
+    Vec3 pressColor = {1.0f, 0.7f, 0.7f};
 };
 
 
@@ -140,6 +145,9 @@ class Engine{
 
         Camera camera;
         Framebuffer framebuffer;
+        std::vector<Vec3> modelColors;
+
+        Vec3 outlineColor;
         
         
 

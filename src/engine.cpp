@@ -21,6 +21,14 @@ Engine::Engine(int w_, int h_){
     scale = 1.0f;
     lightDir = normalize(Vec3{0.0f, 1.0f, -1.0f});
     models.reserve(5);
+    modelColors = {
+        {1.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.5f, 0.5f, 0.0f},
+        {0.0f, 0.5f, 0.5f}
+    };
+    outlineColor = framebuffer.hoverColor;
     printf("Engine created\n");
     
 }
@@ -87,6 +95,7 @@ void Engine::initOpenGL(int w, int h){
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     framebuffer.colorIDloc = glGetUniformLocation(pickerProgram->ID, "colorID");
+    framebuffer.highlightColorLoc = glGetUniformLocation(outlineProgram->ID, "highlightColor");
 
 }
 
@@ -142,10 +151,10 @@ void Engine::render(SDL_Window* window)
     {
         glUniformMatrix4fv(shaderProgram->uModel, 1, GL_FALSE, &model.transformation.m[0]);
 
-        if (model.isHovered)
-            glStencilMask(0xFF);   // write stencil
+        if (model.isHovered || model.isSelected)
+            glStencilMask(0xFF);   
         else
-            glStencilMask(0x00);   // no stencil write
+            glStencilMask(0x00);   
 
         glBindVertexArray(model.VAO);
         glDrawArrays(GL_TRIANGLES, 0, (GLsizei)model.vertices.size());
@@ -160,10 +169,17 @@ void Engine::render(SDL_Window* window)
 
     glUniformMatrix4fv(outlineProgram->uProj, 1, GL_FALSE, &proj.m[0]);
     glUniformMatrix4fv(outlineProgram->uView, 1, GL_FALSE, &view.m[0]);
+    
 
     for (const Model& model : models)
     {
-        if (!model.isHovered) continue;
+        if (model.isHovered) {
+            glUniform3fv(framebuffer.highlightColorLoc, 1, &outlineColor.x);
+        } else if (model.isSelected){
+            glUniform3fv(framebuffer.highlightColorLoc, 1, &framebuffer.selectColor.x);
+        } else {
+            continue;
+        }
 
         Mat4 outlineModel = model.transformation * Mat4::scale({1.03f, 1.03f, 1.03f});
 
@@ -282,7 +298,7 @@ void Engine::parseTrianglesResize(std::vector<openstl::Triangle>& libTri, std::v
 
 Model Engine::createModel(std::vector<openstl::Triangle>& inputTri){
     static uint64_t id = 1;
-    static Vec3 color = {0.0f, 0.0f, 1.0f};
+    static uint8_t colorIDX = 2;
     std::vector<Triangle> triangles;
     parseTrianglesResize(inputTri, triangles);
 
@@ -296,17 +312,17 @@ Model Engine::createModel(std::vector<openstl::Triangle>& inputTri){
         Vertex v0;
         v0.pos    = t.v0;
         v0.normal = t.n;
-        v0.color = color;
+        v0.color = modelColors[colorIDX];
 
         Vertex v1;
         v1.pos    = t.v1;
         v1.normal = t.n;
-        v1.color = color;
+        v1.color = modelColors[colorIDX];
 
         Vertex v2;
         v2.pos    = t.v2;
         v2.normal = t.n;
-        v2.color = color;
+        v2.color = modelColors[colorIDX];
 
         newModel.vertices.push_back(v0);
         newModel.vertices.push_back(v1);
@@ -344,7 +360,8 @@ Model Engine::createModel(std::vector<openstl::Triangle>& inputTri){
     newModel.isSelected = false;
     newModel.isHovered = false;
     newModel.id = id++;
-    color = color + Vec3(0.3f, 0.0f, 0.0f);
+    colorIDX++;
+    if(colorIDX >= modelColors.size()) colorIDX = 0;
 
 
     return newModel;
@@ -378,13 +395,12 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if(event->button.button == SDL_BUTTON_LEFT){
             rotating = true;
+            outlineColor = framebuffer.pressColor;
         } else if(event->button.button == SDL_BUTTON_RIGHT){
             translating = true;
         } 
 
-        for(Model& model : models){
-            if(model.isHovered) model.isSelected = true;
-        }
+        
         
         
         break;
@@ -392,9 +408,23 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
     case SDL_EVENT_MOUSE_BUTTON_UP:
         if(event->button.button == SDL_BUTTON_LEFT){
             rotating = false;
+            outlineColor = framebuffer.hoverColor;
         } else if (event->button.button == SDL_BUTTON_RIGHT){
             translating = false;
         }
+
+        
+        for(Model& model : models){
+            if(model.isSelected){
+                model.isSelected = false;
+                continue;
+            }
+            if(model.isHovered) model.isSelected = true;
+        }
+        
+
+        
+
         break;
 
     case SDL_EVENT_MOUSE_MOTION:
@@ -403,7 +433,7 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
             float angle_y = event->motion.xrel * 0.01;
 
             for(Model& model : models){
-                if(model.isHovered){
+                if(model.isHovered || model.isSelected){
                     model.transformation = Mat4::rotationX(angle_x) * Mat4::rotationY(angle_y) * model.transformation;
                 }
             }
@@ -413,7 +443,7 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
             float trans_x = event->motion.xrel * 0.005;
 
             for(Model& model : models){
-                if(model.isHovered){
+                if(model.isHovered || model.isSelected){
                     model.transformation = Mat4::translation({trans_x, -trans_y, 0.0f}) * model.transformation;
                 }
             }
@@ -436,10 +466,15 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
     case SDL_EVENT_MOUSE_WHEEL:
     {
         float scale = 1.0f + event->wheel.y * 0.1f;
+        int hCount = 0;
         for(Model& model : models){
-            if(model.isHovered){
+            if(model.isHovered || model.isSelected){
                 model.transformation = Mat4::scale({scale, scale, scale}) * model.transformation;
+                hCount++;
             }
+        }
+        if(hCount == 0){
+            camera.position = camera.position + (camera.direction * event->wheel.y);
         }
     }
         break;
