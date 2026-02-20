@@ -19,6 +19,7 @@ Engine::Engine(int w_, int h_){
     translating = false;
     looking = false;
     scale = 1.0f;
+    clickDuration = 0;
     lightDir = normalize(Vec3{0.0f, 1.0f, -1.0f});
     models.reserve(5);
     modelColors = {
@@ -396,6 +397,8 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
         if(event->button.button == SDL_BUTTON_LEFT){
             rotating = true;
             outlineColor = framebuffer.pressColor;
+
+            
         } else if(event->button.button == SDL_BUTTON_RIGHT){
             translating = true;
         } 
@@ -409,20 +412,25 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
         if(event->button.button == SDL_BUTTON_LEFT){
             rotating = false;
             outlineColor = framebuffer.hoverColor;
+            if(clickDuration < 8){
+                for(Model& model : models){
+                    if(model.isSelected){
+                        model.isSelected = false;
+                        continue;
+                    }
+                    if(model.isHovered) model.isSelected = true;
+                }
+            }
+            clickDuration = 0;
+
+
         } else if (event->button.button == SDL_BUTTON_RIGHT){
             translating = false;
         }
 
         
-        for(Model& model : models){
-            if(model.isSelected){
-                model.isSelected = false;
-                continue;
-            }
-            if(model.isHovered) model.isSelected = true;
-        }
         
-
+        
         
 
         break;
@@ -517,6 +525,13 @@ void Engine::handleEvents(SDL_Event* event, SDL_Window* window){
                 printf("\n Models: %d\n", models.size());
                 break;
 
+            case SDLK_DELETE:
+            {
+                for(Model& model : models){
+                    if(model.isSelected) deleteModel(model.id);
+                }    
+            }
+                break;
             case SDLK_O:
             {
                 std::string filepath = browseFiles();

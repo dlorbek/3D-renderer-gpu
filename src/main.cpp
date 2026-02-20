@@ -69,7 +69,6 @@ int main(int argc, char** argv){
     
     
 
-
     const Uint64 targetFrameTime = 1000.0 / game.FPS;
     static int frames = 0;
     static Uint64 fpsTimer = SDL_GetTicks();
@@ -89,7 +88,8 @@ int main(int argc, char** argv){
         
         
         engine.render(game.window);
-    
+        
+        if(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) engine.clickDuration++;
 
 
         // FPS Measurement

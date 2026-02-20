@@ -35,7 +35,7 @@ struct Model
     GLuint VBO = 0;
     GLuint VAO = 0;
     std::vector<Vertex> vertices;
-    Mat4 transformation{};
+    Mat4 transformation, rotation, translation;
     bool isSelected = false, isHovered = false;
     uint64_t id = 0;
 
@@ -103,9 +103,9 @@ struct Framebuffer
     GLuint colorIDloc;
     GLuint highlightColorLoc;
 
-    Vec3 hoverColor = {0.85f, 0.85f, 0.85f};
-    Vec3 selectColor = {1.0f, 1.0f, 1.0f};
-    Vec3 pressColor = {1.0f, 0.7f, 0.7f};
+    Vec3 hoverColor = {1.0f, 1.0f, 1.0f};
+    Vec3 selectColor = {0.275f, 0.867f, 1.0f};
+    Vec3 pressColor = {0.8f, 0.8f, 0.8f};
 };
 
 
@@ -129,6 +129,7 @@ class Engine{
         void handleEvents(SDL_Event* event, SDL_Window* window);
 
         std::vector<Model> models;
+        int clickDuration;
         
     private:
         int w;
@@ -136,6 +137,7 @@ class Engine{
         bool rotating, translating, looking;
         float scale;
         float FOV;
+        
         Mat4 view, proj;
         Vec3 lightDir;
 
