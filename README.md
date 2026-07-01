@@ -2,7 +2,7 @@
 
 A lightweight desktop 3D rendering application built for Windows with **C++**, **SDL3**, and **OpenGL**. The application provides an interactive environment for loading and visualizing multiple STL models simultaneously. This project was built in my free time and is far from polished or completed.
 
-![Application Screenshot](data/images/screenshot.JPG)
+![Application Screenshot](data/images/screenshot.PNG)
 
 
 
@@ -127,7 +127,7 @@ Each transformation affects only the currently selected object.
 ├── Makefile
 ├── README.md
 ├── resources.rc
-├── SDL3.dll
+└── SDL3.dll
 
 ```
 
