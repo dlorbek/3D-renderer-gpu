@@ -49,7 +49,7 @@ int main(int argc, char** argv){
     
 
     // create window and engine
-    std::string winName = "Dan's 3D Viewer - ";
+    std::string winName = "Dan's 3D Viewer";
     Game game;
     game.createWindow(winName.data(), window_w, window_h, SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
